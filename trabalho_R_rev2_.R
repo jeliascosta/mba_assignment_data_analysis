@@ -18,6 +18,8 @@ library(gtsummary)  # Tabelas descritivas formatadas
 library(epiR)       # Intervalos de confiança e análises epidemiológicas
 library(DescTools)  # Testes estatísticos adicionais
 library(vcd)        # Associação entre variáveis categóricas
+library(corrplot)   # Visualização de matrizes de correlação
+library(PerformanceAnalytics) # Gráficos de correlação e dispersão
 
 # ------------------------------------------------------------------------------
 # 1 - Importando e tratando a base de dados
@@ -159,8 +161,33 @@ chisq.test(x = tab,
 #estimados. Qual o percentual de explicação do modelo? Utilize um nível de
 #significância de 5%.
 # -----------------------------------------------------------------------------------------
-
 # Pergunta orientadora: "Quais fatores explicam o score de periculosidade?"
+
+# Seleciona apenas variáveis numéricas
+base_numerica <- base |> 
+  select(where(is.numeric))
+
+## Calcula coeficientes de correlação com o método pearson
+# entre variáveis numéricas, ignorando casos incompletos
+matriz_cor <- cor(base_numerica,
+                  use = "complete.obs", 
+                  method = "pearson")
+
+# Visualização da matriz de correlação
+corrplot(corr = matriz_cor, 
+         method = "color", 
+         type = "upper", 
+         tl.col = "black", 
+         tl.srt = 45)
+
+# Correlograma com gráficos de dispersão
+chart.Correlation(R = base_numerica, 
+                  histogram = TRUE, 
+                  pch = 19)
+
+# Conclusão: excetuando score_periculosidade [variável dependente] vs tempo_preso,
+# não há variáveis numéricas com correlação forte entre si.
+# À priori, não descartaremos nenhuma.
 
 # Ajuste do modelo: score de periculosidade ~ idade + escolaridade + reincidência + filhos + sexo + tempo preso + casado
 fit.model <- lm(formula = score_periculosidade ~ idade + escolaridade + reincidente + 
@@ -195,7 +222,26 @@ par(mfrow = c(1, 1))        # retorna ao layout padrão
 # Estimativas dos coeficientes, R², p-valores e diagnóstico do modelo.
 summary(fit.model)
 
-# Interpretação: Como o valor do Adjusted R-squared é de 0.8355, significa dizer que 83.55% da variação 
+# Interpretação: 
+# p-valores dos Betas de intercepto (β0), escolaridade, reincidente, sexo e tempo_preso são pequenos,
+# ou seja, rejeitamos H0 (βi = 0) para cada um. Logo, estes βi são diferentes de 0, ou seja,
+# as variáveis associadas ajudam a explicar o o score_periculosidade.
+# p-valores dos β de idade, filhos e casado são grandes,
+# ou seja, não rejeitamos H0. Logo, estes coeficientes β são igual a 0, sugerindo 
+# que as variáveis associadas não impactam|ajudam a explicar o score_periculosidade.
+# Reparamos que o p-valor de βcasadoSim não foi tão maior assim que a significância (~2x).
+
+# Em relação às variáveis que ajudam a explicar o score_periculosidade:
+# β0 (intercepto) ~ 38.8 | média do score_periculosidade quando todas as variáveis explicativas são zero.
+# βescolaridadeMédio ~ -6.3 | possuir escolaridade nível médio reduz 6,3 unidades no score de periculosidade,
+# em relação à categoria de referência (escolaridade nível fundamental).
+# βescolaridadeSuperior ~ -11.3 | possuir escolaridade nível superior reduz 11,3 unidades no score de periculosidade,
+# em relação à categoria de referência (escolaridade nível fundamental).
+# βreincidenteSim ~ 15.8 | ser reincidente aumenta 15,8 unidades no score de periculosidade.
+# βsexoMasculino  ~ 19.1 | ser do sexo masculino aumenta 19,1 unidades no score de periculosidade.
+# βtempo_preso ~ 2 | aumento de 1 mês do tempo preso aumenta 2 unidades no score de periculosidade.
+
+# Como o valor do R² ajustado é de 0.8355, significa dizer que 83.55% da variação 
 # no score de periculosidade é explicada pelas variáveis independentes.
 
 # ------------------------------------------------------------------------------
@@ -243,5 +289,16 @@ par(mfrow = c(1, 1))
 # Estimativas dos coeficientes, R², p-valores e diagnóstico do modelo.
 summary(object = best.model)
 
-# Interpretação: Como o valor do Adjusted R-squared é de 0.8367, significa dizer que 83.67% da variação 
+# Interpretação:
+# β0 (intercepto) ~ 38.8 | média do score_periculosidade quando todas as variáveis explicativas são zero.
+# βescolaridadeMédio ~ -6.4 | possuir escolaridade nível médio reduz 6,4 unidades no score de periculosidade,
+# em relação à categoria de referência (escolaridade nível fundamental).
+# βescolaridadeSuperior ~ -11.2 | possuir escolaridade nível superior reduz 11,2 unidades no score de periculosidade,
+# em relação à categoria de referência (escolaridade nível fundamental).
+# βreincidenteSim ~ 15.8 | ser reincidente aumenta 15,8 unidades no score de periculosidade.
+# βsexoMasculino  ~ 19.2 | ser do sexo masculino aumenta 19,2 unidades no score de periculosidade.
+# βtempo_preso ~ 2 | aumento de 1 mês do tempo preso aumenta 2 unidades no score de periculosidade.
+# βcasadoSim ~ 2.4 | ser casado aumenta 2,4 unidades no score de periculosidade.
+
+# Como o valor do R² ajustado é de 0.8367, significa dizer que 83.67% da variação 
 # no score de periculosidade é explicada pelas variáveis independentes.
