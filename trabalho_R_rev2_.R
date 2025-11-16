@@ -58,6 +58,9 @@ summary(base)
 # Visualização gráfica dos dados faltantes, mostrando 100% de presença
 vis_miss(x = base)
 
+# Visualização gráfica dos dados faltantes, mostrando 0% de ausência
+gg_miss_var(x = base,
+            show_pct = TRUE)
 # ------------------------------------------------------------------------------
 # QUESTÃO 01 - Podemos afirmar que o score médio de periculosidade é superior a 170 pontos?
 # ------------------------------------------------------------------------------
@@ -77,8 +80,8 @@ shapiro.test(x = base$score_periculosidade)
 # Como p-valor 0.7738 > 0.05 nível de significância não rejeitamos H0, logo assumimos
 # que os scores de periculosidade possuem distribuição aproximadamente normal
 
-# Visualização da distribuição da score de periculosidade, sugerindo uma distribuição
-# aproximadamente normal pela simetria em relação a mediana
+# Visualização da distribuição da score de periculosidade, indicando possível
+# distribuição ~normal, dada a simetria em relação a mediana
 ggplot(data = base, 
        mapping = aes(y = score_periculosidade)) +
   geom_boxplot() +
@@ -89,7 +92,7 @@ ggplot(data = base,
 # ser maior que 170
 mean(base$score_periculosidade, na.rm = TRUE)
 
-# Teste t para uma média
+# Teste t para uma média, no caso, 170
 # H0: μ = 170
 # H1: μ > 170
 t.test(x = base$score_periculosidade, 
@@ -98,6 +101,7 @@ t.test(x = base$score_periculosidade,
 
 # Conclusão:
 # p-valor = 0.006845 < 0.05 → Rejeitamos H0
+
 # O score de periculosidade médio da população é superior a 170
 
 # Tendo em vista a conclusão acima, calculamos o intervalo de confiança de 95%
