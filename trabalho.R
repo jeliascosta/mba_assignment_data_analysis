@@ -97,6 +97,10 @@ ggplot(data = base,
   labs(y = "Score de periculosidade", x = "") +
   theme_minimal()
 
+# Estimativa pontual igual a 174.5205, reforçando a possibilidade da média populacional
+# ser maior que 170
+media
+
 # Teste de Shapiro-Wilk para normalidade
 # H0: O score de periculosidade segue uma distribuição aproximadamente normal
 # H1: O score de periculosidade não segue uma distribuição aproximadamente normal
@@ -105,10 +109,6 @@ shapiro.test(x = base$score_periculosidade)
 # Conclusão:
 # Como p-valor 0.7738 > 0.05 nível de significância não rejeitamos H0, logo assumimos
 # que os scores de periculosidade possuem distribuição aproximadamente normal
-
-# Estimativa pontual igual a 174.5205, reforçando a possibilidade da média populacional
-# ser maior que 170
-media
 
 # Teste t para uma média, no caso, 170
 # H0: μ = 170
