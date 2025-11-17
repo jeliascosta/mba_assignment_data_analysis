@@ -116,6 +116,135 @@ epi.conf(dat = base$score_periculosidade,
 
 
 # -----------------------------------------------------------------------------------------
+# PERGUNTA 02 - O tempo médio de prisão entre homens e mulheres é igual?
+# -----------------------------------------------------------------------------------------
+
+# Separação dos grupos
+baseH <- base |> filter(sexo == "Masculino")
+baseM <- base |> filter(sexo == "Feminino")
+
+# Teste de normalidade por grupo
+
+#Graficamente
+qq1 = ggqqplot(baseH$tempo_preso)
+qq2 = ggqqplot(baseM$tempo_preso)
+qq1 + qq2
+
+#Teste de normalidade para a população 1 (nível de significância de 5%)
+#H0: O tempo médio de prisão de homens segue uma distribuição aproximadamente normal
+#H1: O tempo médio de prisão de homens não segue uma distribuição aproximadamente normal
+shapiro.test(x = baseH$tempo_preso)
+
+#Conclusão:
+#p-valor = 0.8863 > 0,05 (nivel de sig) não rejeita H0 -> Tempo médio de prisão de homens tem distribuição normal
+
+#Teste de normalidade para a população 2 (nível de significância de 5%)
+#H0: O tempo médio de prisão de mulheres segue uma distribuição aproximadamente normal
+#H1: O tempo médio de prisão de mulheres não segue uma distribuição aproximadamente normal
+shapiro.test(x = baseM$tempo_preso)
+
+#Conclusão:
+#p-valor = 0.09781 > 0,05 (nivel de sig) não rejeita H0 -> O tempo médio de prisão de mulheres tem distribuição normal
+
+#Analise descritiva
+base |> 
+  group_by(sexo) |> 
+  summarise(n = n(),
+            media = mean(x = tempo_preso, na.rm = TRUE),
+            desvio = sd(x = tempo_preso, na.rm = TRUE))
+
+ggplot(data = base,
+       mapping = aes(x = sexo,
+                     y = tempo_preso)) +
+  geom_boxplot() +
+  theme_minimal()
+
+# Teste de igualdade das variâncias
+# H0: σ²_H = σ²_M
+# H1: σ²_H ≠ σ²_M
+VarTest(x = baseH$tempo_preso, 
+        y = baseM$tempo_preso, 
+        alternative = "two.sided", 
+        ratio = 1, 
+        conf.level = 0.95)
+
+#VarTest - Realiza teste de comparação de variâncias entre duas populações (teste F).
+## x - vetor numérico da primeira amostra.
+## y - vetor numérico da segunda amostra.
+## alternative - define a hipótese alternativa: "two.sided" (variâncias diferentes),
+##               "less" (variância de x < variância de y),
+##               "greater" (variância de x > variância de y).
+## ratio - valor da razão de variâncias sob H0 (default = 1).
+## conf.level - nível de confiança do intervalo (ex: 0.95 para 95%).
+
+# Conclusão:
+# p-valor = 0.7134 > 0,05 → Não há evidência suficiente para rejeitar H0. Logo, aceita a hipótese de que as variâncias são iguais
+
+# Teste t para médias independentes
+# H0: μ_H = μ_M
+# H1: μ_H ≠ μ_M
+t.test(x = baseH$tempo_preso, 
+       y = baseM$tempo_preso,  
+       var.equal = TRUE, 
+       alternative = "two.sided")
+
+#t.test - Realiza o teste t de Student para comparação de médias entre duas amostras independentes.
+## x - vetor numérico da primeira amostra.
+## y - vetor numérico da segunda amostra.
+## var.equal - indica se as variâncias das duas amostras devem ser consideradas iguais (TRUE) ou não (FALSE).
+## alternative - define a hipótese alternativa:
+##               "two.sided" (diferença em ambos os lados),
+##               "less" (x < y),
+##               "greater" (x > y).
+
+# Conclusão:
+# p-valor = 0.2072 > 0,05 → Aceitamos H0.
+# O tempo médio de prisão entre homens e mulheres pode ser considerado igual.
+
+# -----------------------------------------------------------------------------------------
+# PERGUNTA 03 - Existe correlação entre o tempo de prisão e o score de periculosidade
+# -----------------------------------------------------------------------------------------
+
+# geom_point(): cria gráfico de dispersão entre duas variáveis numéricas
+base |>
+  ggplot(mapping = aes(x = tempo_preso,
+                       y = score_periculosidade)) +
+  geom_point() +
+  labs(x = "Tempo de prisão",
+       y = "Score de Periculosidade")
+
+# Teste de normalidade por grupo
+
+#Graficamente
+qq1 = ggqqplot(base$tempo_preso)
+qq2 = ggqqplot(base$score_periculosidade)
+qq1 + qq2
+
+shapiro.test(x = base$tempo_preso)
+shapiro.test(x = base$score_periculosidade)
+
+# Correlação de Pearson
+# H0: ρ = 0  (Não existe correlação linear positiva entre tempo de prisão e score de periculosidade)
+# H1: ρ > 0  (Existe correlação linear positiva entre tempo de prisão e score de periculosidade)
+cor.test(x = base$tempo_preso, 
+         y = base$score_periculosidade,
+         alternative = "greater")
+
+#cor.test - Realiza o teste de correlação entre duas variáveis contínuas.
+## x - vetor numérico da primeira variável.
+## y - vetor numérico da segunda variável.
+## alternative - define a hipótese alternativa:
+##               "two.sided" (correlação diferente de 0),
+##               "less" (correlação negativa),
+##               "greater" (correlação positiva).
+
+# Conclusão:
+# p-valor = 2.2e-16 < 0,05 → Rejeitamos H0.
+# Existe correlação linear positiva entre tempo de prisão e score de periculosidade.
+# cor: coeficiente de correlação entre as variáveis: 0.8037558
+
+
+# -----------------------------------------------------------------------------------------
 # PERGUNTA 04 - Há relação entre o sexo e a reincidência dos indivíduos?
 # -----------------------------------------------------------------------------------------
 
